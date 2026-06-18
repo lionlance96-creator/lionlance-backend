@@ -10,12 +10,10 @@ const crypto = require('crypto');
 dotenv.config();
 
 const app = express();
-
-// ===== MIDDLEWARE =====
 app.use(cors());
 app.use(express.json());
 
-// ===== HEALTH CHECKS (for testing) =====
+// ===== HEALTH CHECKS =====
 app.get('/', (req, res) => res.send('🦁 LIONLANCE Backend is running!'));
 app.get('/ping', (req, res) => res.send('pong'));
 
@@ -52,7 +50,6 @@ mongoose
     const PORT = process.env.PORT || 5000;
     app.listen(PORT, '0.0.0.0', () => {
       console.log(`🚀 LIONLANCE Backend running on port ${PORT}`);
-      console.log(`   Test with: curl.exe http://127.0.0.1:${PORT}/`);
     });
   })
   .catch((err) => {
@@ -110,17 +107,13 @@ const Job = mongoose.model('Job', JobSchema);
 const Transaction = mongoose.model('Transaction', TransactionSchema);
 const Payment = mongoose.model('Payment', PaymentSchema);
 
-// ============================================================
-// RAZORPAY
-// ============================================================
+// ===== RAZORPAY =====
 const razorpay = new Razorpay({
   key_id: process.env.RAZORPAY_KEY_ID,
   key_secret: process.env.RAZORPAY_KEY_SECRET,
 });
 
-// ============================================================
-// JWT HELPERS
-// ============================================================
+// ===== JWT HELPERS =====
 const generateToken = (user) => {
   return jwt.sign(
     { id: user._id, email: user.email, isAdmin: user.isAdmin },
@@ -146,9 +139,7 @@ const isAdmin = (req, res, next) => {
   next();
 };
 
-// ============================================================
-// HELPERS
-// ============================================================
+// ===== HELPERS =====
 const MAX_TRANSACTION = Number(process.env.MAX_TRANSACTION_LIMIT) || 500000;
 const BROKERAGE_RATE = 0.10;
 
@@ -296,6 +287,7 @@ app.get('/api/jobs', async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 });
+
 app.get('/api/jobs/:id', async (req, res) => {
   try {
     const job = await Job.findById(req.params.id);
