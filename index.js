@@ -13,9 +13,10 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// ===== HEALTH CHECKS (these MUST be present) =====
+// ===== HEALTH CHECKS =====
 app.get('/', (req, res) => res.send('🦁 LIONLANCE Backend is running!'));
 app.get('/ping', (req, res) => res.send('pong'));
+app.get('/hello', (req, res) => res.send('Hello!'));
 
 // ===== MONGODB CONNECTION =====
 mongoose
@@ -46,7 +47,7 @@ mongoose
       console.error('❌ Admin seed error:', err.message);
     }
 
-    // ===== START SERVER – BIND TO ALL INTERFACES =====
+    // ===== START SERVER =====
     const PORT = process.env.PORT || 5000;
     app.listen(PORT, '0.0.0.0', () => {
       console.log(`🚀 LIONLANCE Backend running on port ${PORT}`);
@@ -242,9 +243,7 @@ app.get('/api/users/:id', verifyToken, isAdmin, async (req, res) => {
   }
 });
 
-// ============================================================
-// JOB ROUTES
-// ============================================================
+
 app.post('/api/jobs', verifyToken, async (req, res) => {
   console.log('📝 Post job hit');
   try {
@@ -484,7 +483,7 @@ app.post('/api/payment/create-order', verifyToken, async (req, res) => {
     if (error) return res.status(400).json({ error });
 
     const options = {
-      amount: Math.round(amount * 100), // paise
+      amount: Math.round(amount * 100),
       currency: 'INR',
       receipt: `receipt_${Date.now()}`,
     };
@@ -531,12 +530,10 @@ app.post('/api/payment/verify', verifyToken, async (req, res) => {
     payment.status = 'paid';
     await payment.save();
 
-    // Credit the user's wallet
     const user = await User.findById(payment.userId);
     user.wallet = (user.wallet || 0) + payment.amount;
     await user.save();
 
-    // Record transaction
     const tx = new Transaction({
       type: 'deposit_company',
       from: 'razorpay',
@@ -656,16 +653,13 @@ app.put('/api/admin/contact', verifyToken, isAdmin, (req, res) => {
 });
 
 // ============================================================
-// GLOBAL ERROR HANDLER (must be after all routes)
+// GLOBAL ERROR HANDLER
 // ============================================================
 app.use((err, req, res, next) => {
   console.error('🔥 Unhandled error:', err.message);
   res.status(500).json({ error: 'Internal server error' });
 });
 
-// ============================================================
-// UNCAUGHT EXCEPTION HANDLER
-// ============================================================
 process.on('uncaughtException', (err) => {
   console.error('🔥 Uncaught Exception:', err);
   process.exit(1);
