@@ -13,7 +13,7 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// ===== HEALTH CHECKS =====
+// ===== HEALTH CHECKS (these MUST be present) =====
 app.get('/', (req, res) => res.send('🦁 LIONLANCE Backend is running!'));
 app.get('/ping', (req, res) => res.send('pong'));
 
