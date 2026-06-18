@@ -18,6 +18,16 @@ app.get('/', (req, res) => res.send('🦁 LIONLANCE Backend is running!'));
 app.get('/ping', (req, res) => res.send('pong'));
 app.get('/hello', (req, res) => res.send('Hello!'));
 
+// ===== DEBUG: List all registered routes =====
+app.get('/routes', (req, res) => {
+  const routes = app._router.stack
+    .filter(r => r.route)
+    .map(r => r.route.path);
+  res.json({ routes });
+});
+
+console.log('✅ Routes defined before MongoDB connection');
+
 // ===== MONGODB CONNECTION =====
 mongoose
   .connect(process.env.MONGODB_URI, { serverSelectionTimeoutMS: 10000 })
@@ -51,6 +61,7 @@ mongoose
     const PORT = process.env.PORT || 5000;
     app.listen(PORT, '0.0.0.0', () => {
       console.log(`🚀 LIONLANCE Backend running on port ${PORT}`);
+      console.log(`   Test: curl ${process.env.RAILWAY_PUBLIC_DOMAIN || 'localhost'}:${PORT}/ping`);
     });
   })
   .catch((err) => {
@@ -243,7 +254,9 @@ app.get('/api/users/:id', verifyToken, isAdmin, async (req, res) => {
   }
 });
 
-
+// ============================================================
+// JOB ROUTES
+// ============================================================
 app.post('/api/jobs', verifyToken, async (req, res) => {
   console.log('📝 Post job hit');
   try {
