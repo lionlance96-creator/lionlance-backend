@@ -13,12 +13,12 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// ===== HEALTH CHECKS =====
+// ===== HEALTH CHECKS (must be first) =====
 app.get('/', (req, res) => res.send('🦁 LIONLANCE Backend is running!'));
 app.get('/ping', (req, res) => res.send('pong'));
 app.get('/hello', (req, res) => res.send('Hello!'));
 
-// ===== DEBUG: List all registered routes =====
+// ===== DEBUG: List all routes =====
 app.get('/routes', (req, res) => {
   const routes = app._router.stack
     .filter(r => r.route)
@@ -61,7 +61,6 @@ mongoose
     const PORT = process.env.PORT || 5000;
     app.listen(PORT, '0.0.0.0', () => {
       console.log(`🚀 LIONLANCE Backend running on port ${PORT}`);
-      console.log(`   Test: curl ${process.env.RAILWAY_PUBLIC_DOMAIN || 'localhost'}:${PORT}/ping`);
     });
   })
   .catch((err) => {
