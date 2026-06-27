@@ -18,11 +18,11 @@
     "jsonwebtoken": "^9.0.2",
     "mongodb": "^7.3.0",
     "mongoose": "^8.9.5",
-    "razorpay": "^2.9.4"
-  },
-  "devDependencies": {
+    "razorpay": "^2.9.4",
     "express-rate-limit": "^7.4.0",
     "express-validator": "^7.2.0"
+  },
+  "devDependencies": {
     "nodemon": "^3.1.9"
   }
 }
