@@ -16,6 +16,12 @@ app.use(express.json());
 // ===== HEALTH CHECKS =====
 app.get('/', (req, res) => res.send('🦁 LIONLANCE Backend is running!'));
 app.get('/ping', (req, res) => res.send('pong'));
+app.get('/routes', (req, res) => {
+  const routes = app._router.stack
+    .filter(r => r.route)
+    .map(r => r.route.path);
+  res.json({ routes });
+});
 
 // ===== MONGODB CONNECTION =====
 mongoose
@@ -356,6 +362,7 @@ app.get('/api/wallet/transactions', verifyToken, async (req, res) => {
   }
 });
 
+// ---- DEPRECATED: kept for admin use, but users will use Razorpay ----
 app.post('/api/wallet/add-funds', verifyToken, async (req, res) => {
   try {
     const { amount } = req.body;
@@ -470,7 +477,7 @@ app.post('/api/wallet/receive', verifyToken, async (req, res) => {
   }
 });
 
-// ===== NEW WITHDRAW ROUTE =====
+// ===== WITHDRAW =====
 app.post('/api/wallet/withdraw', verifyToken, async (req, res) => {
   try {
     const { amount } = req.body;
@@ -488,7 +495,7 @@ app.post('/api/wallet/withdraw', verifyToken, async (req, res) => {
     const tx = new Transaction({
       type: 'withdraw',
       from: user.email,
-      to: 'system', // or admin email
+      to: 'system',
       amount,
       fee: 0,
       recipientAmount: amount,
@@ -519,7 +526,7 @@ app.post('/api/payment/create-order', verifyToken, async (req, res) => {
     if (error) return res.status(400).json({ error });
 
     const options = {
-      amount: Math.round(amount * 100),
+      amount: Math.round(amount * 100), // paise
       currency: 'INR',
       receipt: `receipt_${Date.now()}`,
     };
