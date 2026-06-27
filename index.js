@@ -13,20 +13,9 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// ===== HEALTH CHECKS (must be first) =====
+// ===== HEALTH CHECKS =====
 app.get('/', (req, res) => res.send('🦁 LIONLANCE Backend is running!'));
 app.get('/ping', (req, res) => res.send('pong'));
-app.get('/hello', (req, res) => res.send('Hello!'));
-
-// ===== DEBUG: List all routes =====
-app.get('/routes', (req, res) => {
-  const routes = app._router.stack
-    .filter(r => r.route)
-    .map(r => r.route.path);
-  res.json({ routes });
-});
-
-console.log('✅ Routes defined before MongoDB connection');
 
 // ===== MONGODB CONNECTION =====
 mongoose
@@ -93,7 +82,7 @@ const JobSchema = new mongoose.Schema({
 });
 
 const TransactionSchema = new mongoose.Schema({
-  type: { type: String, enum: ['send', 'receive', 'deposit_company'], required: true },
+  type: { type: String, enum: ['send', 'receive', 'deposit_company', 'withdraw'], required: true },
   from: { type: String, required: true },
   to: { type: String, required: true },
   amount: { type: Number, required: true },
@@ -477,6 +466,41 @@ app.post('/api/wallet/receive', verifyToken, async (req, res) => {
     });
   } catch (err) {
     console.error('Receive payment error:', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ===== NEW WITHDRAW ROUTE =====
+app.post('/api/wallet/withdraw', verifyToken, async (req, res) => {
+  try {
+    const { amount } = req.body;
+    const error = validateAmount(amount);
+    if (error) return res.status(400).json({ error });
+
+    const user = await User.findById(req.user.id);
+    if ((user.wallet || 0) < amount) {
+      return res.status(400).json({ error: 'Insufficient balance' });
+    }
+
+    user.wallet = (user.wallet || 0) - amount;
+    await user.save();
+
+    const tx = new Transaction({
+      type: 'withdraw',
+      from: user.email,
+      to: 'system', // or admin email
+      amount,
+      fee: 0,
+      recipientAmount: amount,
+    });
+    await tx.save();
+
+    res.json({
+      message: 'Withdrawal successful',
+      balance: user.wallet,
+    });
+  } catch (err) {
+    console.error('❌ Withdraw error:', err);
     res.status(500).json({ error: err.message });
   }
 });
